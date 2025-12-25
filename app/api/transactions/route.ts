@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
-import prisma from "@/lib/prisma";
+
+async function getPrisma() {
+  const { default: prisma } = await import("@/lib/prisma");
+  return prisma;
+}
 
 function getUserId(req: NextRequest) {
   const header = req.headers.get("authorization");
@@ -27,6 +31,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "token inválido" }, { status: 401 });
     }
 
+    const prisma = await getPrisma();
     const transations = await prisma.transaction.findMany({
       where: { userId },
       orderBy: { date: "desc" },
@@ -56,6 +61,7 @@ export async function POST(req: NextRequest) {
       if (!isNaN(d.getTime())) parsedDate = d;
     }
 
+    const prisma = await getPrisma();
     const newTransation = await prisma.transaction.create({
       data: {
         amount: parseFloat(amount),
@@ -83,6 +89,7 @@ export async function PUT(req: NextRequest) {
 
     const { id, amount, type, description } = await req.json();
 
+    const prisma = await getPrisma();
     const userExist = await prisma.transaction.findUnique({ where: { id } });
 
     if (!userExist || userExist.userId !== userId) {
@@ -115,6 +122,7 @@ export async function DELETE(req: NextRequest) {
 
     const { id } = await req.json(); // 🔥 corrigido
 
+    const prisma = await getPrisma();
     const userExist = await prisma.transaction.findUnique({ where: { id } });
 
     if (!userExist || userExist.userId !== userId) {

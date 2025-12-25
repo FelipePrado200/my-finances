@@ -1,6 +1,5 @@
 // app/api/dashboard/route.ts - VERSÃO CORRIGIDA
 import { NextRequest, NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
 import jwt from "jsonwebtoken";
 
 // Função para pegar userId do token
@@ -10,18 +9,18 @@ function getUserIdFromToken(req: NextRequest): string | null {
     console.log("❌ Nenhum cabeçalho de autorização");
     return null;
   }
-  
+
   const token = header.replace("Bearer ", "").trim();
-  
+
   if (!token) {
     console.log("❌ Token vazio");
     return null;
   }
-  
+
   try {
     const decoded: any = jwt.verify(token, process.env.JWT_SECRET as string);
     console.log("✅ Token decodificado:", decoded);
-    
+
     // Retorna o userId ou id (o que estiver no token)
     return decoded.userId || decoded.id;
   } catch (error: any) {
@@ -33,109 +32,128 @@ function getUserIdFromToken(req: NextRequest): string | null {
 // GET - Pegar dados do dashboard
 export async function GET(req: NextRequest) {
   console.log("🚀 GET /api/dashboard chamado");
-  
+
   // 1. Verificar autenticação
   const userId = getUserIdFromToken(req);
-  
+
   if (!userId) {
     console.log("🔒 Acesso negado - usuário não autenticado");
     return NextResponse.json(
-      { 
+      {
         success: false,
         error: "Não autorizado",
-        message: "Token inválido ou expirado"
+        message: "Token inválido ou expirado",
       },
       { status: 401 }
     );
   }
-  
+
   console.log("✅ Usuário autorizado:", userId);
-  
+
   try {
+    const { default: prisma } = await import("@/lib/prisma");
     // 2. Calcular período do mês atual
     const hoje = new Date();
     const primeiroDiaMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
     const ultimoDiaMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
-    
-    console.log(`📅 Período: ${primeiroDiaMes.toLocaleDateString('pt-BR')} a ${ultimoDiaMes.toLocaleDateString('pt-BR')}`);
-    
+
+    console.log(
+      `📅 Período: ${primeiroDiaMes.toLocaleDateString(
+        "pt-BR"
+      )} a ${ultimoDiaMes.toLocaleDateString("pt-BR")}`
+    );
+
     // 3. Buscar transações do mês atual
     const transacoesMesAtual = await prisma.transaction.findMany({
       where: {
         userId: userId,
         date: {
           gte: primeiroDiaMes,
-          lte: ultimoDiaMes
-        }
+          lte: ultimoDiaMes,
+        },
       },
       orderBy: {
-        date: "desc"
-      }
+        date: "desc",
+      },
     });
-    
-    console.log(`📊 ${transacoesMesAtual.length} transações encontradas no mês`);
-    
+
+    console.log(
+      `📊 ${transacoesMesAtual.length} transações encontradas no mês`
+    );
+
     // 4. Calcular totais
     let totalEntradas = 0;
     let totalSaidas = 0;
-    
-    transacoesMesAtual.forEach(trans => {
+
+    transacoesMesAtual.forEach((trans) => {
       if (trans.type === "entrada") {
         totalEntradas += trans.amount;
       } else if (trans.type === "saida") {
         totalSaidas += trans.amount;
       }
     });
-    
+
     const saldo = totalEntradas - totalSaidas;
-    
+
     // 5. Pegar últimas 5 transações (de todos os tempos)
     const ultimasTransacoes = await prisma.transaction.findMany({
       where: {
-        userId: userId
+        userId: userId,
       },
       orderBy: {
-        date: "desc"
+        date: "desc",
       },
-      take: 5
+      take: 5,
     });
-    
+
     // 6. Pegar transações dos últimos 3 meses para histórico
     const historicoMensal = [];
-    const nomesMeses = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", 
-                       "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
-    
+    const nomesMeses = [
+      "Jan",
+      "Fev",
+      "Mar",
+      "Abr",
+      "Mai",
+      "Jun",
+      "Jul",
+      "Ago",
+      "Set",
+      "Out",
+      "Nov",
+      "Dez",
+    ];
+
     for (let i = 2; i >= 0; i--) {
       const mes = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
       const primeiroDia = new Date(mes.getFullYear(), mes.getMonth(), 1);
       const ultimoDia = new Date(mes.getFullYear(), mes.getMonth() + 1, 0);
-      
+
       const transacoesMes = await prisma.transaction.findMany({
         where: {
           userId: userId,
           date: {
             gte: primeiroDia,
-            lte: ultimoDia
-          }
-        }
+            lte: ultimoDia,
+          },
+        },
       });
-      
+
       const ganhos = transacoesMes
-        .filter(t => t.type === "entrada")
+        .filter((t) => t.type === "entrada")
         .reduce((total, t) => total + t.amount, 0);
-      
+
       const gastos = transacoesMes
-        .filter(t => t.type === "saida")
+        .filter((t) => t.type === "saida")
         .reduce((total, t) => total + t.amount, 0);
-      
+
       historicoMensal.push({
         mes: nomesMeses[mes.getMonth()],
         ganhos: ganhos,
         gastos: gastos,
-        saldo: ganhos - gastos
+        saldo: ganhos - gastos,
       });
     }
-    
+
     // 7. Formatar resposta
     const resposta = {
       success: true,
@@ -144,30 +162,29 @@ export async function GET(req: NextRequest) {
           entradas: totalEntradas,
           saidas: totalSaidas,
           saldo: saldo,
-          totalTransacoes: transacoesMesAtual.length
+          totalTransacoes: transacoesMesAtual.length,
         },
         historico: historicoMensal,
-        ultimasTransacoes: ultimasTransacoes.map(t => ({
+        ultimasTransacoes: ultimasTransacoes.map((t) => ({
           id: t.id,
           amount: t.amount,
           type: t.type,
           description: t.description || "Sem descrição",
-          date: new Date(t.date).toLocaleDateString('pt-BR')
-        }))
-      }
+          date: new Date(t.date).toLocaleDateString("pt-BR"),
+        })),
+      },
     };
-    
+
     console.log("✅ Dashboard gerado com sucesso!");
     return NextResponse.json(resposta);
-    
   } catch (error: any) {
     console.error("💥 ERRO NO DASHBOARD:", error);
-    
+
     return NextResponse.json(
       {
         success: false,
         error: "Erro interno do servidor",
-        message: error.message
+        message: error.message,
       },
       { status: 500 }
     );
