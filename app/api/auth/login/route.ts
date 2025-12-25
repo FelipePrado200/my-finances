@@ -2,10 +2,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import prisma from "@/lib/prisma";
+// Import do Prisma será feito dinamicamente dentro do handler
 
 export async function POST(req: NextRequest) {
   try {
+    const { default: prisma } = await import("@/lib/prisma");
     const { email, password } = await req.json();
 
     const user = await prisma.user.findUnique({
@@ -29,9 +30,9 @@ export async function POST(req: NextRequest) {
 
     // CRIANDO O TOKEN COM userId
     const token = jwt.sign(
-      { 
-        userId: user.id,  // ✅ ESSE É O CAMPO QUE VOCÊ PRECISA
-        email: user.email 
+      {
+        userId: user.id, // ✅ ESSE É O CAMPO QUE VOCÊ PRECISA
+        email: user.email,
       },
       process.env.JWT_SECRET as string,
       { expiresIn: "24h" }
