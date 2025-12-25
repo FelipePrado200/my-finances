@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "vercel-build": "npx prisma generate && next build",
+    "vercel": "npm run vercel-build",
     "start": "next start",
     "lint": "eslint"
   },
