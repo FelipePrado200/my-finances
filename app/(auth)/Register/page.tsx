@@ -57,28 +57,28 @@ export default function RegisterPage() {
   }, []);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500">
-      <div className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800">
+      <div className="glass p-8 rounded-2xl shadow-2xl w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-800">Criar conta</h1>
-          <p className="text-gray-600 mt-2">Preencha seus dados</p>
+          <h1 className="text-3xl font-bold text-slate-100">Criar conta</h1>
+          <p className="text-slate-300 mt-2">Preencha seus dados</p>
         </div>
 
         {error && (
-          <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-lg text-sm">
+          <div className="mb-4 p-3 bg-red-900/20 text-red-300 rounded-lg text-sm">
             {error}
           </div>
         )}
 
         <form onSubmit={handleRegister} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-slate-200 mb-2">
               Nome
             </label>
             <input
               type="text"
               placeholder="Seu nome"
-              className="w-full px-4 py-3 text-black border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              className="w-full px-4 py-3 text-slate-100 border border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-transparent"
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
@@ -86,13 +86,13 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-slate-200 mb-2">
               Email
             </label>
             <input
               type="email"
               placeholder="seu@email.com"
-              className="w-full px-4 py-3 text-black border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              className="w-full px-4 py-3 text-slate-100 border border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-transparent"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -100,13 +100,13 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-slate-200 mb-2">
               Senha
             </label>
             <input
               type="password"
               placeholder="********"
-              className="w-full px-4 py-3 text-black border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              className="w-full px-4 py-3 text-slate-100 border border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-transparent"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -116,14 +116,16 @@ export default function RegisterPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full mb-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full mb-2 btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? "Registrando..." : "Registrar"}
           </button>
         </form>
 
-        <div className="text-black mt-3">
-          <Link href="/login">Já tem uma conta? Clique aqui.</Link>
+        <div className="text-slate-300 mt-3">
+          <Link href="/login" className="text-indigo-300 hover:text-indigo-200">
+            Já tem uma conta? Clique aqui.
+          </Link>
         </div>
       </div>
     </div>

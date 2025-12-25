@@ -215,13 +215,13 @@ export default function DashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-50">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800">
         <Header title="Meu Financeiro" />
         <div className="container mx-auto p-4">
           <Hero />
           <div className="text-center py-20">
-            <div className="w-16 h-16 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-gray-600">
+            <div className="w-16 h-16 border-4 border-indigo-500/60 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-slate-300">
               Carregando seus dados financeiros...
             </p>
           </div>
@@ -231,7 +231,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800">
       <Header title="Meu Financeiro" />
 
       <div className="container mx-auto p-4 md:p-6">
@@ -241,7 +241,7 @@ export default function DashboardPage() {
         <div className="flex justify-end mb-4">
           <button
             onClick={handleRefresh}
-            className="flex items-center gap-2 px-4 py-2 bg-white text-indigo-600 rounded-lg hover:bg-gray-50 transition-colors duration-200 shadow-sm border border-indigo-100"
+            className="flex items-center gap-2 px-4 py-2 bg-slate-800/60 text-slate-100 rounded-lg hover:bg-slate-800 transition-colors duration-200 shadow-sm border border-slate-700"
           >
             <span>🔄</span>
             Atualizar Dados
@@ -275,12 +275,12 @@ export default function DashboardPage() {
         {/* Conteúdo Principal */}
         <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Últimas Transações */}
-          <div className="bg-white rounded-xl shadow-lg p-6">
+          <div className="glass p-6">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold text-gray-800">
+              <h2 className="text-xl font-bold text-slate-100">
                 Últimas Transações
               </h2>
-              <span className="bg-indigo-100 text-indigo-800 text-sm font-medium px-3 py-1 rounded-full">
+              <span className="bg-indigo-900/20 text-indigo-300 text-sm font-medium px-3 py-1 rounded-full">
                 {dashboardData?.totais.totalTransacoes || 0} total
               </span>
             </div>
@@ -294,19 +294,19 @@ export default function DashboardPage() {
             ) : (
               <div className="text-center py-10">
                 <div className="text-6xl mb-4">📊</div>
-                <p className="text-gray-500 mb-2">
+                <p className="text-slate-300 mb-2">
                   Nenhuma transação registrada ainda
                 </p>
-                <p className="text-gray-400 text-sm">
+                <p className="text-slate-400 text-sm">
                   Suas transações aparecerão aqui
                 </p>
               </div>
             )}
 
-            <div className="mt-6 pt-6 border-t border-gray-100">
+            <div className="mt-6 pt-6 border-t border-slate-700">
               <Link
                 href="/transactions"
-                className="block w-full text-center bg-indigo-50 text-indigo-600 hover:bg-indigo-100 py-3 rounded-lg font-medium transition-colors duration-200"
+                className="block w-full text-center bg-slate-700 text-indigo-300 hover:bg-slate-700/90 py-3 rounded-lg font-medium transition-colors duration-200"
               >
                 Ver todas as transações →
               </Link>
@@ -314,12 +314,12 @@ export default function DashboardPage() {
           </div>
 
           {/* Histórico Mensal */}
-          <div className="bg-white rounded-xl shadow-lg p-6">
+          <div className="glass p-6">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold text-gray-800">
+              <h2 className="text-xl font-bold text-slate-100">
                 Histórico Mensal
               </h2>
-              <span className="bg-purple-100 text-purple-800 text-sm font-medium px-3 py-1 rounded-full">
+              <span className="bg-purple-900/20 text-purple-300 text-sm font-medium px-3 py-1 rounded-full">
                 Últimos 3 meses
               </span>
             </div>
@@ -338,15 +338,15 @@ export default function DashboardPage() {
             ) : (
               <div className="text-center py-10">
                 <div className="text-6xl mb-4">📅</div>
-                <p className="text-gray-500 mb-2">Sem histórico disponível</p>
-                <p className="text-gray-400 text-sm">
+                <p className="text-slate-300 mb-2">Sem histórico disponível</p>
+                <p className="text-slate-400 text-sm">
                   O histórico será gerado com o tempo
                 </p>
               </div>
             )}
 
             <div className="mt-6 text-center">
-              <p className="text-gray-500 text-sm">
+              <p className="text-slate-400 text-sm">
                 * Baseado nas transações registradas no sistema
               </p>
             </div>
@@ -355,49 +355,48 @@ export default function DashboardPage() {
 
         {/* Estatísticas Adicionais */}
         <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-white p-4 rounded-lg shadow text-center">
-            <p className="text-2xl font-bold text-gray-800">
+          <div className="glass p-4 text-center">
+            <p className="text-2xl font-bold text-slate-100">
               {dashboardData?.totais.totalTransacoes || 0}
             </p>
-            <p className="text-gray-600 text-sm">Transações</p>
+            <p className="text-slate-300 text-sm">Transações</p>
           </div>
 
-          <div className="bg-white p-4 rounded-lg shadow text-center">
-            <p className="text-2xl font-bold text-green-600">
+          <div className="glass p-4 text-center">
+            <p className="text-2xl font-bold text-green-400">
               {dashboardData?.historico?.[0]?.ganhos ? "💰" : "📈"}
             </p>
-            <p className="text-gray-600 text-sm">Mês atual</p>
+            <p className="text-slate-300 text-sm">Mês atual</p>
           </div>
 
-          <div className="bg-white p-4 rounded-lg shadow text-center">
-            <p className="text-2xl font-bold text-red-600">
+          <div className="glass p-4 text-center">
+            <p className="text-2xl font-bold text-red-400">
               {dashboardData?.historico?.[0]?.gastos ? "💸" : "📉"}
             </p>
-            <p className="text-gray-600 text-sm">Despesas</p>
+            <p className="text-slate-300 text-sm">Despesas</p>
           </div>
 
-          <div className="bg-white p-4 rounded-lg shadow text-center">
-            <p className="text-2xl font-bold text-indigo-600">
+          <div className="glass p-4 text-center">
+            <p className="text-2xl font-bold text-indigo-400">
               {dashboardData?.ultimasTransacoes?.length || 0}
             </p>
-            <p className="text-gray-600 text-sm">Recentes</p>
+            <p className="text-slate-300 text-sm">Recentes</p>
           </div>
         </div>
 
         {/* Call to Action */}
-        <div className="mt-8 p-8 rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 text-white text-center relative overflow-hidden">
-          {/* Elementos decorativos */}
-          <div className="absolute -top-10 -left-10 w-20 h-20 bg-white/10 rounded-full"></div>
-          <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-white/10 rounded-full"></div>
+        <div className="mt-8 p-8 rounded-xl glass text-center relative overflow-hidden">
+          <div className="absolute -top-10 -left-10 w-20 h-20 bg-white/4 rounded-full"></div>
+          <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-white/4 rounded-full"></div>
 
           <div className="relative z-10">
-            <h3 className="text-2xl font-bold mb-3">
+            <h3 className="text-2xl font-bold mb-3 text-slate-100">
               {dashboardData?.totais.totalTransacoes
                 ? `Você está no controle das suas finanças!`
                 : "Dê o primeiro passo para organizar suas finanças!"}
             </h3>
 
-            <p className="mb-6 opacity-90">
+            <p className="mb-6 text-slate-300">
               {dashboardData?.totais.totalTransacoes
                 ? `Continue registrando suas transações para ter um histórico completo.`
                 : "Registre sua primeira transação e comece a acompanhar seus gastos e ganhos."}
@@ -406,7 +405,7 @@ export default function DashboardPage() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
                 href="/transactions"
-                className="inline-flex items-center justify-center bg-white text-purple-600 hover:bg-gray-100 px-6 py-3 rounded-lg font-bold transition-all duration-300 hover:scale-105"
+                className="inline-flex items-center justify-center bg-slate-700 text-indigo-300 hover:bg-slate-700/90 px-6 py-3 rounded-lg font-bold transition-all duration-300 hover:scale-105"
               >
                 {dashboardData?.totais.totalTransacoes
                   ? "Ver todas as transações"
@@ -417,7 +416,7 @@ export default function DashboardPage() {
               {dashboardData?.totais.totalTransacoes > 0 && (
                 <button
                   onClick={handleRefresh}
-                  className="inline-flex items-center justify-center bg-transparent border-2 border-white text-white hover:bg-white/10 px-6 py-3 rounded-lg font-bold transition-all duration-300"
+                  className="inline-flex items-center justify-center bg-transparent border-2 border-white/6 text-slate-100 hover:bg-white/6 px-6 py-3 rounded-lg font-bold transition-all duration-300"
                 >
                   Atualizar Dashboard
                 </button>
@@ -428,17 +427,17 @@ export default function DashboardPage() {
 
         {/* Mensagem de Erro */}
         {error && (
-          <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <div className="mt-6 p-4 bg-red-900/20 border border-red-800 rounded-lg">
             <div className="flex items-start">
-              <span className="text-red-500 mr-2">❌</span>
+              <span className="text-red-400 mr-2">❌</span>
               <div>
-                <p className="text-red-700 font-medium">
+                <p className="text-red-300 font-medium">
                   Erro ao carregar dados
                 </p>
-                <p className="text-red-600 text-sm mt-1">{error}</p>
+                <p className="text-red-200 text-sm mt-1">{error}</p>
                 <button
                   onClick={handleRefresh}
-                  className="mt-2 text-red-600 hover:text-red-800 underline text-sm"
+                  className="mt-2 text-red-300 hover:text-red-100 underline text-sm"
                 >
                   Tentar novamente
                 </button>
@@ -448,7 +447,7 @@ export default function DashboardPage() {
         )}
 
         {/* Footer Informativo */}
-        <div className="mt-8 text-center text-gray-500 text-sm">
+        <div className="mt-8 text-center text-slate-400 text-sm">
           <p>
             Sistema desenvolvido com Next.js 14, TypeScript, Prisma e SQLite
             <span className="mx-2">•</span>
