@@ -6,7 +6,7 @@ type HeaderProps = {
 export function Header({ title }: HeaderProps) {
   function handlelogout() {
     localStorage.removeItem("token");
-    window.location.href = "/Login";
+    window.location.href = "/login";
   }
   return (
     <header className="flex justify-between items-center bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 text-slate-100 p-6 shadow-lg">

@@ -176,7 +176,7 @@ export default function DashboardPage() {
     const token = localStorage.getItem("token");
 
     if (!token) {
-      router.push("/Login");
+      router.push("/login");
     } else {
       fetchDashboardData(token);
     }
