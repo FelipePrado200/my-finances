@@ -9,15 +9,24 @@ export function Header({ title }: HeaderProps) {
     window.location.href = "/login";
   }
   return (
-    <header className="flex justify-between items-center bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 text-slate-100 p-6 shadow-lg">
-      <h1 className="text-3xl font-extrabold tracking-wide">{title}</h1>
-      <button
-        onClick={handlelogout}
-        type="submit"
-        className="btn-primary px-4 py-2 font-semibold shadow-sm hover:opacity-95 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        Logout
-      </button>
+    <header className="flex items-center justify-between p-6 bg-transparent container-max">
+      <div className="flex items-center gap-4">
+        <div className="w-12 h-12 rounded-lg glass flex items-center justify-center elevated">
+          <span className="text-xl font-bold">MF</span>
+        </div>
+        <h1 className="text-2xl font-extrabold tracking-tight">{title}</h1>
+      </div>
+
+      <div className="flex items-center gap-3">
+        <button className="btn btn-ghost">Nova Transação</button>
+        <button
+          onClick={handlelogout}
+          type="button"
+          className="btn btn-primary"
+        >
+          Logout
+        </button>
+      </div>
     </header>
   );
 }

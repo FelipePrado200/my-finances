@@ -6,7 +6,6 @@ import { Header } from "../_components/header";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
-
 type Transaction = {
   id: string;
   amount: number; // MUDADO: agora é number, não string
@@ -169,13 +168,13 @@ export default function TransactionsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800">
       <Header title="Página de Transações" />
 
       <section className="container p-4 md:p-6 mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* FORMULÁRIO */}
-          <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 text-white p-6 rounded-xl shadow-lg">
+          <div className="glass p-6 rounded-xl elevated text-slate-100">
             <h2 className="text-xl font-bold mb-6">➕ Adicionar Transação</h2>
 
             <form onSubmit={handleTransaction} className="space-y-4">
@@ -231,17 +230,14 @@ export default function TransactionsPage() {
                 </div>
               )}
 
-              <button
-                type="submit"
-                className="w-full bg-white text-purple-600 hover:bg-gray-100 py-3 rounded-lg font-bold transition-colors duration-200 shadow-md"
-              >
+              <button type="submit" className="btn btn-primary w-full">
                 📝 Adicionar Transação
               </button>
             </form>
           </div>
 
           {/* LISTA DE TRANSAÇÕES */}
-          <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 text-white p-6 rounded-xl shadow-lg">
+          <div className="glass p-6 rounded-xl elevated text-slate-100">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-bold">📋 Suas Transações</h2>
               <span className="bg-white/20 px-3 py-1 rounded-full text-sm">
@@ -293,7 +289,7 @@ export default function TransactionsPage() {
                           <span>{formatDate(t.date)}</span>
                           <button
                             onClick={() => deleteTransaction(t.id)}
-                            className="text-red-300 hover:text-red-100 transition-colors"
+                            className="btn btn-danger text-sm"
                             title="Excluir transação"
                           >
                             🗑️ Excluir
@@ -327,16 +323,13 @@ export default function TransactionsPage() {
             )}
           </div>
         </div>
-        <div className=" flex items-center justify-center mt-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 text-white p-6 rounded-xl shadow-lg ">
-          <button>
-            <Link
-              href={"/dashboard"}
-              className=" p-4 block w-full text-center bg-indigo-50 text-indigo-600 hover:bg-indigo-100 py-3 rounded-lg font-bold transition-colors duration-200"
-            >
-              {" "}
-              Clique aqui para retornar ao Dashboard{" "}
-            </Link>
-          </button>
+        <div className="flex items-center justify-center mt-4 glass p-6 rounded-xl shadow-lg">
+          <Link
+            href={"/dashboard"}
+            className="btn btn-outline w-full text-center"
+          >
+            Clique aqui para retornar ao Dashboard
+          </Link>
         </div>
       </section>
     </div>

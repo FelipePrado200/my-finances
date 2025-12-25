@@ -32,12 +32,11 @@ function DashboardCard({
     }
   };
 
-  const formatMoney = (val: number) => {
-    return new Intl.NumberFormat("pt-BR", {
+  const formatMoney = (val: number) =>
+    new Intl.NumberFormat("pt-BR", {
       style: "currency",
       currency: "BRL",
     }).format(val);
-  };
 
   return (
     <div
@@ -59,37 +58,40 @@ function DashboardCard({
 
 // Componente de Transação Recente
 function RecentTransaction({ transaction }: { transaction: any }) {
-  const formatMoney = (val: number) => {
-    return new Intl.NumberFormat("pt-BR", {
+  const formatMoney = (val: number) =>
+    new Intl.NumberFormat("pt-BR", {
       style: "currency",
       currency: "BRL",
     }).format(val);
-  };
 
   return (
-    <div className="flex items-center justify-between p-4 hover:bg-gray-50 rounded-lg transition-colors duration-200 border border-gray-100">
+    <div className="flex items-center justify-between p-4 rounded-lg transition-colors duration-200 border border-slate-700 hover:bg-slate-800/40">
       <div className="flex items-center">
         <div
           className={`w-10 h-10 rounded-full flex items-center justify-center mr-3 ${
-            transaction.type === "entrada" ? "bg-green-100" : "bg-red-100"
+            transaction.type === "entrada" ? "bg-emerald-800" : "bg-rose-800"
           }`}
         >
           <span
             className={`text-lg ${
-              transaction.type === "entrada" ? "text-green-600" : "text-red-600"
+              transaction.type === "entrada"
+                ? "text-emerald-300"
+                : "text-rose-300"
             }`}
           >
             {transaction.type === "entrada" ? "⬆️" : "⬇️"}
           </span>
         </div>
         <div>
-          <p className="font-medium text-gray-800">{transaction.description}</p>
-          <p className="text-sm text-gray-500">{transaction.date}</p>
+          <p className="font-medium text-slate-100">
+            {transaction.description}
+          </p>
+          <p className="text-sm text-slate-300">{transaction.date}</p>
         </div>
       </div>
       <span
         className={`font-bold ${
-          transaction.type === "entrada" ? "text-green-600" : "text-red-600"
+          transaction.type === "entrada" ? "text-emerald-300" : "text-rose-300"
         }`}
       >
         {transaction.type === "entrada" ? "+" : "-"}{" "}
@@ -98,7 +100,6 @@ function RecentTransaction({ transaction }: { transaction: any }) {
     </div>
   );
 }
-
 // Componente de Histórico
 function HistoryItem({
   month,
@@ -109,14 +110,12 @@ function HistoryItem({
   income: number;
   expense: number;
 }) {
-  const formatMoney = (val: number) => {
-    return new Intl.NumberFormat("pt-BR", {
+  const formatMoney = (val: number) =>
+    new Intl.NumberFormat("pt-BR", {
       style: "currency",
       currency: "BRL",
     }).format(val);
-  };
-
-  const maxValue = Math.max(income, expense, 5000); // Base para cálculo da barra
+  const maxValue = Math.max(income, expense, 5000);
 
   return (
     <div className="space-y-3 p-4 rounded-lg transition-colors duration-200 hover:bg-slate-800/40">
@@ -131,7 +130,6 @@ function HistoryItem({
         </span>
       </div>
 
-      {/* Barra de Entradas */}
       <div>
         <div className="flex justify-between text-sm mb-1">
           <span className="text-emerald-300">Entradas</span>
@@ -147,7 +145,6 @@ function HistoryItem({
         </div>
       </div>
 
-      {/* Barra de Saídas */}
       <div>
         <div className="flex justify-between text-sm mb-1">
           <span className="text-rose-300">Saídas</span>
@@ -238,14 +235,14 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800">
       <Header title="Meu Financeiro" />
 
-      <div className="container mx-auto p-4 md:p-6">
+      <div className="container-max mx-auto p-4 md:p-6">
         <Hero />
 
         {/* Botão de Atualizar */}
         <div className="flex justify-end mb-4">
           <button
             onClick={handleRefresh}
-            className="flex items-center gap-2 px-4 py-2 bg-slate-800/60 text-slate-100 rounded-lg hover:bg-slate-800 transition-colors duration-200 shadow-sm border border-slate-700"
+            className="btn btn-ghost flex items-center gap-2"
           >
             <span>🔄</span>
             Atualizar Dados
@@ -310,7 +307,7 @@ export default function DashboardPage() {
             <div className="mt-6 pt-6 border-t border-slate-700">
               <Link
                 href="/transactions"
-                className="block w-full text-center bg-slate-700 text-indigo-300 hover:bg-slate-700/90 py-3 rounded-lg font-medium transition-colors duration-200"
+                className="btn btn-outline block w-full text-center"
               >
                 Ver todas as transações →
               </Link>
@@ -409,7 +406,7 @@ export default function DashboardPage() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
                 href="/transactions"
-                className="inline-flex items-center justify-center bg-slate-700 text-indigo-300 hover:bg-slate-700/90 px-6 py-3 rounded-lg font-bold transition-all duration-300 hover:scale-105"
+                className="btn btn-primary inline-flex items-center justify-center"
               >
                 {dashboardData?.totais.totalTransacoes
                   ? "Ver todas as transações"
@@ -420,7 +417,7 @@ export default function DashboardPage() {
               {dashboardData?.totais.totalTransacoes > 0 && (
                 <button
                   onClick={handleRefresh}
-                  className="inline-flex items-center justify-center bg-transparent border-2 border-white/6 text-slate-100 hover:bg-white/6 px-6 py-3 rounded-lg font-bold transition-all duration-300"
+                  className="btn btn-ghost inline-flex items-center justify-center"
                 >
                   Atualizar Dashboard
                 </button>
@@ -441,7 +438,7 @@ export default function DashboardPage() {
                 <p className="text-red-200 text-sm mt-1">{error}</p>
                 <button
                   onClick={handleRefresh}
-                  className="mt-2 text-red-300 hover:text-red-100 underline text-sm"
+                  className="btn btn-danger mt-2 text-sm"
                 >
                   Tentar novamente
                 </button>

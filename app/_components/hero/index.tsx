@@ -25,12 +25,17 @@ export function Hero() {
         Acompanhe suas receitas, despesas e saldo de forma simples e eficiente.
       </p>
 
-      <div className="w-full max-w-2xl glass p-8 rounded-xl">
+      <div className="w-full max-w-3xl glass p-6 md:p-10 rounded-2xl elevated">
         <div className="flex justify-between items-center mb-3">
-          <h3 className="text-base font-bold text-slate-100">
-            Progresso do Lucro - 2024
-          </h3>
-          <span className="text-xs px-2 py-1 bg-white/6 rounded text-slate-200">
+          <div>
+            <h3 className="text-base font-bold text-slate-100">
+              Progresso do Lucro - 2024
+            </h3>
+            <p className="text-sm text-slate-300">
+              Visão rápida de performance
+            </p>
+          </div>
+          <span className="text-xs px-3 py-1 bg-indigo-900/20 rounded-full text-indigo-300 font-medium">
             ↑ 32%
           </span>
         </div>
