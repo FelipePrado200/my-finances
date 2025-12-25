@@ -1,13 +1,22 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+
 type HeaderProps = {
   title: string;
 };
 export function Header({ title }: HeaderProps) {
+  const router = useRouter();
+
   function handlelogout() {
     localStorage.removeItem("token");
-    window.location.href = "/login";
+    router.push("/login");
   }
+
+  function handleNewTransaction() {
+    router.push("/transactions");
+  }
+
   return (
     <header className="flex items-center justify-between p-6 bg-transparent container-max">
       <div className="flex items-center gap-4">
@@ -18,7 +27,9 @@ export function Header({ title }: HeaderProps) {
       </div>
 
       <div className="flex items-center gap-3">
-        <button className="btn btn-ghost">Nova Transação</button>
+        <button onClick={handleNewTransaction} className="btn btn-ghost">
+          Nova Transação
+        </button>
         <button
           onClick={handlelogout}
           type="button"

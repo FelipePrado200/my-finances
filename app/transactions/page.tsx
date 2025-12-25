@@ -19,6 +19,9 @@ export default function TransactionsPage() {
   const [valor, setValor] = useState("");
   const [tipo, setTipo] = useState("entrada");
   const [descricao, setDescricao] = useState("");
+  const [dataTransacao, setDataTransacao] = useState<string>(
+    new Date().toISOString().slice(0, 10)
+  );
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -82,6 +85,22 @@ export default function TransactionsPage() {
       return;
     }
 
+    // Validação da data: deve estar dentro dos últimos 3 meses
+    const today = new Date();
+    const selected = new Date(dataTransacao + "T00:00:00");
+    const minDate = new Date();
+    // considerar os últimos 3 meses incluindo o mês atual: min = dia 1 de 2 meses atrás
+    minDate.setMonth(minDate.getMonth() - 2);
+    minDate.setDate(1);
+    // normaliza horas para comparação
+    minDate.setHours(0, 0, 0, 0);
+    today.setHours(23, 59, 59, 999);
+
+    if (selected < minDate || selected > today) {
+      setError("A data deve estar dentro dos últimos 3 meses");
+      return;
+    }
+
     if (!descricao.trim()) {
       setError("Digite uma descrição");
       return;
@@ -100,6 +119,7 @@ export default function TransactionsPage() {
           amount: parseFloat(valor), // CONVERTE para número
           type: tipo,
           description: descricao.trim(),
+          date: new Date(dataTransacao + "T00:00:00").toISOString(),
         }),
       });
 
@@ -115,9 +135,10 @@ export default function TransactionsPage() {
       // Limpar formulário
       setValor("");
       setDescricao("");
+      setDataTransacao(new Date().toISOString().slice(0, 10));
 
-      // Mostrar mensagem de sucesso
-      alert("✅ Transação criada com sucesso!");
+      // Redirecionar ao dashboard para refletir no histórico mensal
+      router.push("/dashboard");
     } catch (e: any) {
       console.error("ERRO NO POST:", e);
       setError(e.message || "Erro ao criar transação");
@@ -190,6 +211,24 @@ export default function TransactionsPage() {
                   placeholder="Ex: 150.50"
                   value={valor}
                   onChange={(e) => setValor(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block mb-2 text-sm font-medium">Data</label>
+                <input
+                  type="date"
+                  className="w-full p-3 border rounded text-white bg-transparent"
+                  value={dataTransacao}
+                  onChange={(e) => setDataTransacao(e.target.value)}
+                  max={new Date().toISOString().slice(0, 10)}
+                  min={(() => {
+                    const d = new Date();
+                    d.setMonth(d.getMonth() - 2);
+                    d.setDate(1);
+                    return d.toISOString().slice(0, 10);
+                  })()}
                   required
                 />
               </div>

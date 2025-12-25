@@ -12,12 +12,7 @@ function getUserId(req: NextRequest) {
     const decoded: any = jwt.verify(token, process.env.JWT_SECRET as string);
 
     // TENTA VÁRIOS CAMPOS POSSÍVEIS
-    return (
-      decoded.userId ||    
-      decoded.id ||        
-      decoded.sub ||       
-      decoded.user?.id   
-    );
+    return decoded.userId || decoded.id || decoded.sub || decoded.user?.id;
   } catch (error) {
     console.error("Erro ao decodificar token:", error);
     return null;
@@ -52,7 +47,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "token inválido" }, { status: 401 });
     }
 
-    const { amount, type, description } = await req.json();
+    const { amount, type, description, date } = await req.json();
+
+    // Se o cliente enviar uma data válida, use-a; caso contrário, use a data atual
+    let parsedDate: Date | undefined = undefined;
+    if (date) {
+      const d = new Date(date);
+      if (!isNaN(d.getTime())) parsedDate = d;
+    }
 
     const newTransation = await prisma.transaction.create({
       data: {
@@ -60,6 +62,7 @@ export async function POST(req: NextRequest) {
         type,
         description,
         userId,
+        date: parsedDate || new Date(),
       },
     });
 
