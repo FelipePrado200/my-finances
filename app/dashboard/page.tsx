@@ -22,13 +22,13 @@ function DashboardCard({
   const getColors = () => {
     switch (type) {
       case "income":
-        return "from-green-400 to-emerald-500";
+        return "from-emerald-700 to-emerald-500";
       case "expense":
-        return "from-red-400 to-pink-500";
+        return "from-rose-700 to-rose-500";
       case "balance":
         return value >= 0
-          ? "from-blue-400 to-indigo-500"
-          : "from-yellow-400 to-orange-500";
+          ? "from-sky-700 to-indigo-600"
+          : "from-amber-700 to-orange-600";
     }
   };
 
@@ -41,7 +41,7 @@ function DashboardCard({
 
   return (
     <div
-      className={`bg-gradient-to-br ${getColors()} text-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300`}
+      className={`bg-gradient-to-br ${getColors()} text-slate-100 p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300`}
     >
       <div className="flex items-center justify-between">
         <div>
@@ -50,8 +50,8 @@ function DashboardCard({
         </div>
         <div className="text-4xl">{icon}</div>
       </div>
-      <div className="mt-4 pt-4 border-t border-white/20">
-        <p className="text-sm">Este mês</p>
+      <div className="mt-4 pt-4 border-t border-white/10">
+        <p className="text-sm text-slate-200">Este mês</p>
       </div>
     </div>
   );
@@ -119,12 +119,12 @@ function HistoryItem({
   const maxValue = Math.max(income, expense, 5000); // Base para cálculo da barra
 
   return (
-    <div className="space-y-3 p-4 hover:bg-gray-50 rounded-lg transition-colors duration-200">
+    <div className="space-y-3 p-4 rounded-lg transition-colors duration-200 hover:bg-slate-800/40">
       <div className="flex justify-between items-center">
-        <span className="font-bold text-gray-800">{month.toUpperCase()}</span>
+        <span className="font-bold text-slate-100">{month.toUpperCase()}</span>
         <span
           className={`text-sm font-medium ${
-            income - expense >= 0 ? "text-green-600" : "text-red-600"
+            income - expense >= 0 ? "text-emerald-300" : "text-rose-300"
           }`}
         >
           {formatMoney(income - expense)}
@@ -134,12 +134,14 @@ function HistoryItem({
       {/* Barra de Entradas */}
       <div>
         <div className="flex justify-between text-sm mb-1">
-          <span className="text-green-600">Entradas</span>
-          <span className="font-medium">{formatMoney(income)}</span>
+          <span className="text-emerald-300">Entradas</span>
+          <span className="font-medium text-slate-200">
+            {formatMoney(income)}
+          </span>
         </div>
-        <div className="w-full bg-gray-200 rounded-full h-2">
+        <div className="w-full bg-slate-700 rounded-full h-2">
           <div
-            className="bg-green-500 h-2 rounded-full transition-all duration-500"
+            className="bg-emerald-500 h-2 rounded-full transition-all duration-500"
             style={{ width: `${(income / maxValue) * 100}%` }}
           ></div>
         </div>
@@ -148,12 +150,14 @@ function HistoryItem({
       {/* Barra de Saídas */}
       <div>
         <div className="flex justify-between text-sm mb-1">
-          <span className="text-red-600">Saídas</span>
-          <span className="font-medium">{formatMoney(expense)}</span>
+          <span className="text-rose-300">Saídas</span>
+          <span className="font-medium text-slate-200">
+            {formatMoney(expense)}
+          </span>
         </div>
-        <div className="w-full bg-gray-200 rounded-full h-2">
+        <div className="w-full bg-slate-700 rounded-full h-2">
           <div
-            className="bg-red-500 h-2 rounded-full transition-all duration-500"
+            className="bg-rose-500 h-2 rounded-full transition-all duration-500"
             style={{ width: `${(expense / maxValue) * 100}%` }}
           ></div>
         </div>
