@@ -1,4 +1,4 @@
-// app/dashboard/page.tsx - VERSÃO ATUALIZADA
+// app/dashboard/page.tsx - VERSÃO REFATORADA COM DESIGN PREMIUM
 "use client";
 
 import { useEffect, useState } from "react";
@@ -7,7 +7,6 @@ import { Header } from "../_components/header";
 import { Hero } from "../_components/hero";
 import Link from "next/link";
 
-// Componente de Card Dinâmico
 function DashboardCard({
   title,
   value,
@@ -22,13 +21,22 @@ function DashboardCard({
   const getColors = () => {
     switch (type) {
       case "income":
-        return "from-emerald-700 to-emerald-500";
+        return "text-success-400";
       case "expense":
-        return "from-rose-700 to-rose-500";
+        return "text-danger-500";
       case "balance":
-        return value >= 0
-          ? "from-sky-700 to-indigo-600"
-          : "from-amber-700 to-orange-600";
+        return value >= 0 ? "text-primary-400 text-gradient" : "text-danger-500";
+    }
+  };
+
+  const getBgGlow = () => {
+    switch (type) {
+      case "income":
+        return "shadow-[0_0_30px_rgba(16,185,129,0.15)]";
+      case "expense":
+        return "shadow-[0_0_30px_rgba(244,63,94,0.15)]";
+      case "balance":
+        return "shadow-[0_0_30px_rgba(124,58,237,0.2)]";
     }
   };
 
@@ -39,24 +47,30 @@ function DashboardCard({
     }).format(val);
 
   return (
-    <div
-      className={`bg-gradient-to-br ${getColors()} text-slate-100 p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300`}
-    >
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm opacity-90">{title}</p>
-          <p className="text-3xl font-bold mt-2">{formatMoney(value)}</p>
+    <div className={`glass-panel p-6 relative overflow-hidden group hover:-translate-y-1 transition-all duration-300 ${getBgGlow()}`}>
+      <div className="absolute -right-6 -top-6 w-24 h-24 bg-white/5 rounded-full blur-2xl group-hover:bg-white/10 transition-colors"></div>
+      
+      <div className="flex items-center justify-between mb-4">
+        <p className="text-sm font-medium text-slate-400 uppercase tracking-wider">{title}</p>
+        <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-xl backdrop-blur-md border border-white/10">
+          {icon}
         </div>
-        <div className="text-4xl">{icon}</div>
       </div>
-      <div className="mt-4 pt-4 border-t border-white/10">
-        <p className="text-sm text-slate-200">Este mês</p>
+      
+      <div>
+        <p className={`text-4xl font-bold tracking-tight ${getColors()}`}>
+          {formatMoney(value)}
+        </p>
+      </div>
+      
+      <div className="mt-5 pt-4 border-t border-white/5 flex items-center justify-between">
+        <span className="text-xs text-slate-500">Relativo a este mês</span>
+        <span className="text-xs font-medium bg-white/5 px-2 py-1 rounded-md text-slate-300">Atualizado</span>
       </div>
     </div>
   );
 }
 
-// Componente de Transação Recente
 function RecentTransaction({ transaction }: { transaction: any }) {
   const formatMoney = (val: number) =>
     new Intl.NumberFormat("pt-BR", {
@@ -64,43 +78,34 @@ function RecentTransaction({ transaction }: { transaction: any }) {
       currency: "BRL",
     }).format(val);
 
+  const isIncome = transaction.type === "entrada";
+
   return (
-    <div className="flex items-center justify-between p-4 rounded-lg transition-colors duration-200 border border-slate-700 hover:bg-slate-800/40">
-      <div className="flex items-center">
-        <div
-          className={`w-10 h-10 rounded-full flex items-center justify-center mr-3 ${
-            transaction.type === "entrada" ? "bg-emerald-800" : "bg-rose-800"
-          }`}
-        >
-          <span
-            className={`text-lg ${
-              transaction.type === "entrada"
-                ? "text-emerald-300"
-                : "text-rose-300"
-            }`}
-          >
-            {transaction.type === "entrada" ? "⬆️" : "⬇️"}
+    <div className="flex items-center justify-between p-4 rounded-xl transition-all duration-300 hover:bg-white/5 border border-transparent hover:border-white/10 group cursor-pointer">
+      <div className="flex items-center gap-4">
+        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-110 ${
+          isIncome ? "bg-success-500/10 text-success-400 border border-success-500/20" : "bg-danger-500/10 text-danger-500 border border-danger-500/20"
+        }`}>
+          <span className="text-xl">
+            {isIncome ? "↗" : "↘"}
           </span>
         </div>
         <div>
-          <p className="font-medium text-slate-100">
+          <p className="font-semibold text-slate-200 group-hover:text-white transition-colors">
             {transaction.description}
           </p>
-          <p className="text-sm text-slate-300">{transaction.date}</p>
+          <p className="text-xs text-slate-500 mt-0.5">{transaction.date}</p>
         </div>
       </div>
-      <span
-        className={`font-bold ${
-          transaction.type === "entrada" ? "text-emerald-300" : "text-rose-300"
-        }`}
-      >
-        {transaction.type === "entrada" ? "+" : "-"}{" "}
-        {formatMoney(transaction.amount)}
-      </span>
+      <div className="text-right">
+        <span className={`font-bold text-lg ${isIncome ? "text-success-400" : "text-white"}`}>
+          {isIncome ? "+" : "-"}{formatMoney(transaction.amount)}
+        </span>
+      </div>
     </div>
   );
 }
-// Componente de Histórico
+
 function HistoryItem({
   month,
   income,
@@ -115,48 +120,49 @@ function HistoryItem({
       style: "currency",
       currency: "BRL",
     }).format(val);
-  const maxValue = Math.max(income, expense, 5000);
+  const maxValue = Math.max(income, expense, 100); // Evitar divisão por zero
+  const balance = income - expense;
 
   return (
-    <div className="space-y-3 p-4 rounded-lg transition-colors duration-200 hover:bg-slate-800/40">
-      <div className="flex justify-between items-center">
-        <span className="font-bold text-slate-100">{month.toUpperCase()}</span>
-        <span
-          className={`text-sm font-medium ${
-            income - expense >= 0 ? "text-emerald-300" : "text-rose-300"
-          }`}
-        >
-          {formatMoney(income - expense)}
-        </span>
-      </div>
-
-      <div>
-        <div className="flex justify-between text-sm mb-1">
-          <span className="text-emerald-300">Entradas</span>
-          <span className="font-medium text-slate-200">
-            {formatMoney(income)}
-          </span>
-        </div>
-        <div className="w-full bg-slate-700 rounded-full h-2">
-          <div
-            className="bg-emerald-500 h-2 rounded-full transition-all duration-500"
-            style={{ width: `${(income / maxValue) * 100}%` }}
-          ></div>
+    <div className="p-5 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-colors">
+      <div className="flex justify-between items-center mb-5">
+        <span className="font-bold text-slate-200 uppercase tracking-widest text-sm">{month}</span>
+        <div className={`px-3 py-1 rounded-full text-xs font-bold border ${
+          balance >= 0 ? "bg-success-500/10 text-success-400 border-success-500/20" : "bg-danger-500/10 text-danger-400 border-danger-500/20"
+        }`}>
+          {balance >= 0 ? "+" : ""}{formatMoney(balance)}
         </div>
       </div>
 
-      <div>
-        <div className="flex justify-between text-sm mb-1">
-          <span className="text-rose-300">Saídas</span>
-          <span className="font-medium text-slate-200">
-            {formatMoney(expense)}
-          </span>
+      <div className="space-y-4">
+        <div>
+          <div className="flex justify-between text-xs mb-1.5 font-medium">
+            <span className="text-slate-400">Entradas</span>
+            <span className="text-success-400">{formatMoney(income)}</span>
+          </div>
+          <div className="w-full bg-slate-800/50 rounded-full h-1.5 overflow-hidden">
+            <div
+              className="bg-success-400 h-full rounded-full transition-all duration-1000 ease-out relative"
+              style={{ width: `${(income / maxValue) * 100}%` }}
+            >
+              <div className="absolute top-0 right-0 bottom-0 w-10 bg-gradient-to-r from-transparent to-white/30"></div>
+            </div>
+          </div>
         </div>
-        <div className="w-full bg-slate-700 rounded-full h-2">
-          <div
-            className="bg-rose-500 h-2 rounded-full transition-all duration-500"
-            style={{ width: `${(expense / maxValue) * 100}%` }}
-          ></div>
+
+        <div>
+          <div className="flex justify-between text-xs mb-1.5 font-medium">
+            <span className="text-slate-400">Saídas</span>
+            <span className="text-danger-400">{formatMoney(expense)}</span>
+          </div>
+          <div className="w-full bg-slate-800/50 rounded-full h-1.5 overflow-hidden">
+            <div
+              className="bg-danger-500 h-full rounded-full transition-all duration-1000 ease-out relative"
+              style={{ width: `${(expense / maxValue) * 100}%` }}
+            >
+               <div className="absolute top-0 right-0 bottom-0 w-10 bg-gradient-to-r from-transparent to-white/30"></div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -200,7 +206,6 @@ export default function DashboardPage() {
         throw new Error(data.error || "Erro ao carregar dados");
       }
     } catch (err: any) {
-      console.error("❌ Erro no dashboard:", err);
       setError(err.message || "Falha ao carregar dashboard");
     } finally {
       setIsLoading(false);
@@ -216,14 +221,14 @@ export default function DashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800">
+      <div className="min-h-screen bg-[#030014]">
         <Header title="Meu Financeiro" />
         <div className="container mx-auto p-4">
           <Hero />
-          <div className="text-center py-20">
-            <div className="w-16 h-16 border-4 border-indigo-500/60 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-slate-300">
-              Carregando seus dados financeiros...
+          <div className="text-center py-32 flex flex-col items-center">
+            <div className="w-16 h-16 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mb-6"></div>
+            <p className="text-slate-400 font-medium animate-pulse">
+              Sincronizando seus dados financeiros...
             </p>
           </div>
         </div>
@@ -232,228 +237,162 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800">
-      <Header title="Meu Financeiro" />
+    <div className="min-h-screen bg-[#030014] relative">
+      {/* Subtle Aurora Background for Dashboard */}
+      <div className="absolute top-0 inset-x-0 h-[500px] pointer-events-none overflow-hidden opacity-30">
+        <div className="absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full bg-primary-600/20 blur-[100px]"></div>
+        <div className="absolute top-20 right-0 w-[500px] h-[500px] rounded-full bg-[#38bdf8]/10 blur-[120px]"></div>
+      </div>
 
-      <div className="container-max mx-auto p-4 md:p-6">
-        <Hero />
+      <div className="relative z-10">
+        <Header title="Meu Financeiro" />
 
-        {/* Botão de Atualizar */}
-        <div className="flex justify-end mb-4">
-          <button
-            onClick={handleRefresh}
-            className="btn btn-ghost flex items-center gap-2"
-          >
-            <span>🔄</span>
-            Atualizar Dados
-          </button>
-        </div>
+        <div className="container-max mx-auto p-4 md:p-8">
+          <Hero />
 
-        {/* Cards de Resumo */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-          <DashboardCard
-            title="Entradas"
-            value={dashboardData?.totais.entradas || 0}
-            type="income"
-            icon="💰"
-          />
-
-          <DashboardCard
-            title="Saídas"
-            value={dashboardData?.totais.saidas || 0}
-            type="expense"
-            icon="💸"
-          />
-
-          <DashboardCard
-            title="Saldo Atual"
-            value={dashboardData?.totais.saldo || 0}
-            type="balance"
-            icon={dashboardData?.totais.saldo >= 0 ? "⚖️" : "⚠️"}
-          />
-        </div>
-
-        {/* Conteúdo Principal */}
-        <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Últimas Transações */}
-          <div className="glass p-6">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold text-slate-100">
-                Últimas Transações
-              </h2>
-              <span className="bg-indigo-900/20 text-indigo-300 text-sm font-medium px-3 py-1 rounded-full">
-                {dashboardData?.totais.totalTransacoes || 0} total
-              </span>
-            </div>
-
-            {dashboardData?.ultimasTransacoes?.length > 0 ? (
-              <div className="space-y-3">
-                {dashboardData.ultimasTransacoes.map((trans: any) => (
-                  <RecentTransaction key={trans.id} transaction={trans} />
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-10">
-                <div className="text-6xl mb-4">📊</div>
-                <p className="text-slate-300 mb-2">
-                  Nenhuma transação registrada ainda
-                </p>
-                <p className="text-slate-400 text-sm">
-                  Suas transações aparecerão aqui
-                </p>
-              </div>
-            )}
-
-            <div className="mt-6 pt-6 border-t border-slate-700">
-              <Link
-                href="/transactions"
-                className="btn btn-outline block w-full text-center"
-              >
-                Ver todas as transações →
-              </Link>
-            </div>
+          <div className="flex justify-between items-center mb-6 mt-4">
+            <h1 className="text-2xl font-bold text-white">Visão Geral</h1>
+            <button
+              onClick={handleRefresh}
+              className="btn btn-ghost hover:bg-white/5 text-sm"
+            >
+              <span className="mr-2">↻</span> Sincronizar
+            </button>
           </div>
 
-          {/* Histórico Mensal */}
-          <div className="glass p-6">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold text-slate-100">
-                Histórico Mensal
-              </h2>
-              <span className="bg-purple-900/20 text-purple-300 text-sm font-medium px-3 py-1 rounded-full">
-                Últimos 3 meses
-              </span>
-            </div>
+          {/* Cards de Resumo - Bento Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <DashboardCard
+              title="Receitas"
+              value={dashboardData?.totais.entradas || 0}
+              type="income"
+              icon="💰"
+            />
 
-            {dashboardData?.historico?.length > 0 ? (
-              <div className="space-y-4">
-                {dashboardData.historico.map((month: any, index: number) => (
-                  <HistoryItem
-                    key={index}
-                    month={month.mes}
-                    income={month.ganhos}
-                    expense={month.gastos}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-10">
-                <div className="text-6xl mb-4">📅</div>
-                <p className="text-slate-300 mb-2">Sem histórico disponível</p>
-                <p className="text-slate-400 text-sm">
-                  O histórico será gerado com o tempo
-                </p>
-              </div>
-            )}
+            <DashboardCard
+              title="Despesas"
+              value={dashboardData?.totais.saidas || 0}
+              type="expense"
+              icon="💳"
+            />
 
-            <div className="mt-6 text-center">
-              <p className="text-slate-400 text-sm">
-                * Baseado nas transações registradas no sistema
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Estatísticas Adicionais */}
-        <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="glass p-4 text-center">
-            <p className="text-2xl font-bold text-slate-100">
-              {dashboardData?.totais.totalTransacoes || 0}
-            </p>
-            <p className="text-slate-300 text-sm">Transações</p>
+            <DashboardCard
+              title="Saldo Atual"
+              value={dashboardData?.totais.saldo || 0}
+              type="balance"
+              icon={dashboardData?.totais.saldo >= 0 ? "✨" : "⚠️"}
+            />
           </div>
 
-          <div className="glass p-4 text-center">
-            <p className="text-2xl font-bold text-green-400">
-              {dashboardData?.historico?.[0]?.ganhos ? "💰" : "📈"}
-            </p>
-            <p className="text-slate-300 text-sm">Mês atual</p>
-          </div>
-
-          <div className="glass p-4 text-center">
-            <p className="text-2xl font-bold text-red-400">
-              {dashboardData?.historico?.[0]?.gastos ? "💸" : "📉"}
-            </p>
-            <p className="text-slate-300 text-sm">Despesas</p>
-          </div>
-
-          <div className="glass p-4 text-center">
-            <p className="text-2xl font-bold text-indigo-400">
-              {dashboardData?.ultimasTransacoes?.length || 0}
-            </p>
-            <p className="text-slate-300 text-sm">Recentes</p>
-          </div>
-        </div>
-
-        {/* Call to Action */}
-        <div className="mt-8 p-8 rounded-xl glass text-center relative overflow-hidden">
-          <div className="absolute -top-10 -left-10 w-20 h-20 bg-white/4 rounded-full"></div>
-          <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-white/4 rounded-full"></div>
-
-          <div className="relative z-10">
-            <h3 className="text-2xl font-bold mb-3 text-slate-100">
-              {dashboardData?.totais.totalTransacoes
-                ? `Você está no controle das suas finanças!`
-                : "Dê o primeiro passo para organizar suas finanças!"}
-            </h3>
-
-            <p className="mb-6 text-slate-300">
-              {dashboardData?.totais.totalTransacoes
-                ? `Continue registrando suas transações para ter um histórico completo.`
-                : "Registre sua primeira transação e comece a acompanhar seus gastos e ganhos."}
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link
-                href="/transactions"
-                className="btn btn-primary inline-flex items-center justify-center"
-              >
-                {dashboardData?.totais.totalTransacoes
-                  ? "Ver todas as transações"
-                  : "Criar primeira transação"}
-                <span className="ml-2">→</span>
-              </Link>
-
-              {dashboardData?.totais.totalTransacoes > 0 && (
-                <button
-                  onClick={handleRefresh}
-                  className="btn btn-ghost inline-flex items-center justify-center"
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            {/* Últimas Transações (Ocupa 2 colunas no XL) */}
+            <div className="xl:col-span-2 glass-panel p-1 flex flex-col h-[500px]">
+              <div className="p-6 pb-4 flex justify-between items-center border-b border-white/5">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-primary-500/20 flex items-center justify-center text-primary-400">
+                    ⟲
+                  </div>
+                  <h2 className="text-xl font-bold text-white">Últimas Transações</h2>
+                </div>
+                <Link
+                  href="/transactions"
+                  className="text-sm font-medium text-primary-400 hover:text-primary-300 transition-colors"
                 >
-                  Atualizar Dashboard
-                </button>
-              )}
+                  Ver todas →
+                </Link>
+              </div>
+
+              <div className="p-2 overflow-y-auto flex-1 custom-scrollbar">
+                {dashboardData?.ultimasTransacoes?.length > 0 ? (
+                  <div className="space-y-1">
+                    {dashboardData.ultimasTransacoes.map((trans: any) => (
+                      <RecentTransaction key={trans.id} transaction={trans} />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="h-full flex flex-col items-center justify-center text-center p-6">
+                    <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mb-4 border border-white/10 text-3xl">
+                      📊
+                    </div>
+                    <p className="text-white font-medium mb-1">Nenhuma transação</p>
+                    <p className="text-slate-400 text-sm">Suas transações recentes aparecerão aqui.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Histórico Mensal */}
+            <div className="glass-panel p-1 flex flex-col h-[500px]">
+              <div className="p-6 pb-4 flex justify-between items-center border-b border-white/5">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-[#38bdf8]/20 flex items-center justify-center text-[#38bdf8]">
+                    📈
+                  </div>
+                  <h2 className="text-xl font-bold text-white">Desempenho</h2>
+                </div>
+              </div>
+
+              <div className="p-4 overflow-y-auto flex-1 custom-scrollbar space-y-4">
+                {dashboardData?.historico?.length > 0 ? (
+                  dashboardData.historico.map((month: any, index: number) => (
+                    <HistoryItem
+                      key={index}
+                      month={month.mes}
+                      income={month.ganhos}
+                      expense={month.gastos}
+                    />
+                  ))
+                ) : (
+                  <div className="h-full flex flex-col items-center justify-center text-center p-6">
+                    <div className="text-4xl mb-4 opacity-50">📅</div>
+                    <p className="text-white font-medium mb-1">Sem histórico</p>
+                    <p className="text-slate-400 text-sm">O histórico será gerado conforme você adiciona transações.</p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Mensagem de Erro */}
-        {error && (
-          <div className="mt-6 p-4 bg-red-900/20 border border-red-800 rounded-lg">
-            <div className="flex items-start">
-              <span className="text-red-400 mr-2">❌</span>
+          {/* Estatísticas Rápidas (Mini Cards) */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+            <div className="glass p-5 rounded-2xl flex flex-col items-center justify-center text-center hover:bg-white/5 transition-colors">
+              <span className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-2">Transações Totais</span>
+              <span className="text-3xl font-bold text-white">{dashboardData?.totais.totalTransacoes || 0}</span>
+            </div>
+            
+            <div className="glass p-5 rounded-2xl flex flex-col items-center justify-center text-center hover:bg-white/5 transition-colors">
+              <span className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-2">Status do Mês</span>
+              <span className="text-3xl">{dashboardData?.historico?.[0]?.ganhos >= dashboardData?.historico?.[0]?.gastos ? "🔥" : "🧊"}</span>
+            </div>
+            
+            <div className="glass p-5 rounded-2xl flex flex-col items-center justify-center text-center hover:bg-white/5 transition-colors">
+              <span className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-2">Transações Recentes</span>
+              <span className="text-3xl font-bold text-primary-400">{dashboardData?.ultimasTransacoes?.length || 0}</span>
+            </div>
+
+            <div className="glass p-5 rounded-2xl flex flex-col items-center justify-center text-center bg-gradient-to-br from-primary-600/20 to-transparent border-primary-500/30">
+              <Link href="/transactions" className="w-full h-full flex flex-col items-center justify-center">
+                <span className="text-2xl mb-1">➕</span>
+                <span className="text-sm font-medium text-white">Nova Transação</span>
+              </Link>
+            </div>
+          </div>
+
+          {error && (
+            <div className="mt-8 p-4 glass border-danger-500/30 bg-danger-500/10 rounded-2xl flex items-start">
+              <span className="text-2xl mr-4">⚠️</span>
               <div>
-                <p className="text-red-300 font-medium">
-                  Erro ao carregar dados
-                </p>
-                <p className="text-red-200 text-sm mt-1">{error}</p>
-                <button
-                  onClick={handleRefresh}
-                  className="btn btn-danger mt-2 text-sm"
-                >
-                  Tentar novamente
-                </button>
+                <h4 className="text-white font-bold mb-1">Falha na sincronização</h4>
+                <p className="text-slate-300 text-sm">{error}</p>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Footer Informativo */}
-        <div className="mt-8 text-center text-slate-400 text-sm">
-          <p>
-            Sistema desenvolvido com Next.js 14, TypeScript, Prisma e SQLite
-            <span className="mx-2">•</span>
-            Dados atualizados em tempo real
-          </p>
+          <div className="mt-12 mb-8 text-center">
+            <p className="text-slate-500 text-sm font-medium">
+              Dashboard Financeiro <span className="mx-2 opacity-30">|</span> Next.js 15 & Prisma
+            </p>
+          </div>
         </div>
       </div>
     </div>
