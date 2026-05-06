@@ -4,9 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
-    "vercel-build": "npx prisma generate && next build",
-    "vercel": "npm run vercel-build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint"
   },
