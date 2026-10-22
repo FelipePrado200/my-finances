@@ -1,56 +1,35 @@
-"use client";
-
-import { Outfit } from "next/font/google";
+import type { Metadata } from "next";
+import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
-import { useEffect } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { AuthGuard } from "./_components/auth-guard";
 
-const outfit = Outfit({
-  variable: "--font-outfit",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
+  display: "swap",
 });
+
+const jakarta = Plus_Jakarta_Sans({
+  variable: "--font-jakarta",
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+  display: "swap",
+});
+
+export const metadata: Metadata = {
+  title: "Meu Financeiro",
+  description: "Controle financeiro pessoal: entradas, saídas e saldo mensal.",
+};
 
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const router = useRouter();
-  const pathname = usePathname();
-
-  useEffect(() => {
-    // 🔥 LÓGICA DE AUTENTICAÇÃO
-    const publicRoutes = ["/login", "/register", "/"];
-
-    // Verificar localStorage APENAS no cliente
-    if (typeof window !== "undefined") {
-      const token = localStorage.getItem("token");
-
-      // Se não tem token e não está em rota pública → redireciona para login
-      if (!token && !publicRoutes.includes(pathname)) {
-        router.push("/login");
-      }
-
-      // Se tem token e está em login → redireciona para dashboard
-      if (token && pathname === "/login") {
-        router.push("/dashboard");
-      }
-    }
-  }, [pathname, router]);
-
   return (
     <html lang="pt-BR">
-      <head>
-        <title>Meu Financeiro</title>
-        <meta
-          name="description"
-          content="Sistema de controle financeiro pessoal"
-        />
-      </head>
-      <body
-        className={`${outfit.variable} antialiased dark`}
-      >
-        {children}
+      <body className={`${inter.variable} ${jakarta.variable} antialiased`}>
+        <AuthGuard>{children}</AuthGuard>
       </body>
     </html>
   );

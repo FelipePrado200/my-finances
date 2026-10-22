@@ -1,6 +1,7 @@
-// app/api/dashboard/route.ts - VERSÃO CORRIGIDA
+// app/api/dashboard/summary/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
+import { toNumber, serializeTransaction } from "@/lib/serialize";
 
 // Função para pegar userId do token
 function getUserIdFromToken(req: NextRequest): string | null {
@@ -87,9 +88,9 @@ export async function GET(req: NextRequest) {
 
     transacoesMesAtual.forEach((trans) => {
       if (trans.type === "entrada") {
-        totalEntradas += trans.amount;
+        totalEntradas += toNumber(trans.amount);
       } else if (trans.type === "saida") {
-        totalSaidas += trans.amount;
+        totalSaidas += toNumber(trans.amount);
       }
     });
 
@@ -107,7 +108,12 @@ export async function GET(req: NextRequest) {
     });
 
     // 6. Pegar transações dos últimos 3 meses para histórico
-    const historicoMensal = [];
+    const historicoMensal: Array<{
+      mes: string;
+      ganhos: number;
+      gastos: number;
+      saldo: number;
+    }> = [];
     const nomesMeses = [
       "Jan",
       "Fev",
@@ -140,11 +146,11 @@ export async function GET(req: NextRequest) {
 
       const ganhos = transacoesMes
         .filter((t) => t.type === "entrada")
-        .reduce((total, t) => total + t.amount, 0);
+        .reduce((total, t) => total + toNumber(t.amount), 0);
 
       const gastos = transacoesMes
         .filter((t) => t.type === "saida")
-        .reduce((total, t) => total + t.amount, 0);
+        .reduce((total, t) => total + toNumber(t.amount), 0);
 
       historicoMensal.push({
         mes: nomesMeses[mes.getMonth()],
@@ -165,13 +171,7 @@ export async function GET(req: NextRequest) {
           totalTransacoes: transacoesMesAtual.length,
         },
         historico: historicoMensal,
-        ultimasTransacoes: ultimasTransacoes.map((t) => ({
-          id: t.id,
-          amount: t.amount,
-          type: t.type,
-          description: t.description || "Sem descrição",
-          date: new Date(t.date).toLocaleDateString("pt-BR"),
-        })),
+        ultimasTransacoes: ultimasTransacoes.map(serializeTransaction),
       },
     };
 

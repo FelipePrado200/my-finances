@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
+import { serializeTransaction, serializeTransactions } from "@/lib/serialize";
 
 async function getPrisma() {
   const { default: prisma } = await import("@/lib/prisma");
@@ -32,12 +33,12 @@ export async function GET(req: NextRequest) {
     }
 
     const prisma = await getPrisma();
-    const transations = await prisma.transaction.findMany({
+    const transactions = await prisma.transaction.findMany({
       where: { userId },
       orderBy: { date: "desc" },
     });
 
-    return NextResponse.json(transations);
+    return NextResponse.json(serializeTransactions(transactions));
   } catch (e) {
     console.log(e);
     return NextResponse.json({ error: "erro no GET" }, { status: 500 });
@@ -62,7 +63,7 @@ export async function POST(req: NextRequest) {
     }
 
     const prisma = await getPrisma();
-    const newTransation = await prisma.transaction.create({
+    const newTransaction = await prisma.transaction.create({
       data: {
         amount: parseFloat(amount),
         type,
@@ -72,7 +73,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    return NextResponse.json(newTransation);
+    return NextResponse.json(serializeTransaction(newTransaction));
   } catch (e) {
     console.log(e);
     return NextResponse.json({ error: "erro no POST" }, { status: 500 });
@@ -96,7 +97,7 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: "não autorizado" }, { status: 403 });
     }
 
-    const att = await prisma.transaction.update({
+    const updated = await prisma.transaction.update({
       where: { id },
       data: {
         amount: parseFloat(amount),
@@ -105,7 +106,7 @@ export async function PUT(req: NextRequest) {
       },
     });
 
-    return NextResponse.json(att);
+    return NextResponse.json(serializeTransaction(updated));
   } catch (e) {
     console.log(e);
     return NextResponse.json({ error: "erro no PUT" }, { status: 500 });

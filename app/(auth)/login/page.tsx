@@ -72,7 +72,7 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Email */}
             <div>
-              <label htmlFor="email" className="label">
+              <label htmlFor="email">
                 Email
               </label>
               <input
@@ -89,7 +89,7 @@ export default function LoginPage() {
 
             {/* Password */}
             <div>
-              <label htmlFor="password" className="label">
+              <label htmlFor="password">
                 Senha
               </label>
               <input

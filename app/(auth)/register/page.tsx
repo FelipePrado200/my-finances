@@ -98,7 +98,7 @@ export default function RegisterPage() {
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Name */}
             <div>
-              <label htmlFor="name" className="label">
+              <label htmlFor="name">
                 Nome Completo
               </label>
               <input
@@ -115,7 +115,7 @@ export default function RegisterPage() {
 
             {/* Email */}
             <div>
-              <label htmlFor="email" className="label">
+              <label htmlFor="email">
                 Email
               </label>
               <input
@@ -132,7 +132,7 @@ export default function RegisterPage() {
 
             {/* Password */}
             <div>
-              <label htmlFor="password" className="label">
+              <label htmlFor="password">
                 Senha
               </label>
               <input
@@ -150,7 +150,7 @@ export default function RegisterPage() {
 
             {/* Confirm Password */}
             <div>
-              <label htmlFor="confirmPassword" className="label">
+              <label htmlFor="confirmPassword">
                 Confirmar Senha
               </label>
               <input

@@ -1,77 +1,110 @@
-// app/transactions/page.tsx - VERSÃO CORRIGIDA
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { Header } from "../_components/header";
+import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { Header } from "../_components/header";
 
 type Transaction = {
   id: string;
-  amount: number; // MUDADO: agora é number, não string
+  amount: number;
   type: string;
-  description: string;
+  description: string | null;
   date: string;
 };
 
+const money = (value: number) =>
+  new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  }).format(value);
+
+const fullDate = (iso: string) =>
+  new Date(iso).toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+
+/** First day of the month two months back, which is the oldest date allowed. */
+function minAllowedDate() {
+  const min = new Date();
+  min.setMonth(min.getMonth() - 2);
+  min.setDate(1);
+  min.setHours(0, 0, 0, 0);
+  return min;
+}
+
 export default function TransactionsPage() {
   const router = useRouter();
+
   const [valor, setValor] = useState("");
   const [tipo, setTipo] = useState("entrada");
   const [descricao, setDescricao] = useState("");
-  const [dataTransacao, setDataTransacao] = useState<string>(
+  const [dataTransacao, setDataTransacao] = useState(
     new Date().toISOString().slice(0, 10)
   );
+
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
 
-  // 🔥 CARREGAR TRANSAÇÕES
   useEffect(() => {
-    async function fetchTransactions() {
-      const token = localStorage.getItem("token");
+    const token = localStorage.getItem("token");
+    if (!token) {
+      router.push("/login");
+      return;
+    }
 
-      if (!token) {
-        router.push("/login");
-        return;
-      }
-
+    async function fetchTransactions(authToken: string) {
       setIsLoading(true);
       setError("");
 
       try {
         const res = await fetch("/api/transactions", {
-          headers: {
-            Authorization: token,
-          },
+          headers: { Authorization: authToken },
         });
+
+        if (res.status === 401) {
+          localStorage.removeItem("token");
+          router.push("/login");
+          return;
+        }
 
         const data = await res.json();
 
         if (!res.ok) {
-          throw new Error(data.error || "Erro ao carregar transações");
+          throw new Error(data.error || "Erro ao carregar transações.");
         }
 
-        if (Array.isArray(data)) {
-          setTransactions(data);
-        } else {
-          console.error("Resposta não é array:", data);
-          setTransactions([]);
-        }
+        setTransactions(Array.isArray(data) ? data : []);
       } catch (e: any) {
-        console.error("ERRO NO GET:", e);
-        setError(e.message || "Falha ao carregar transações");
+        setError(e.message || "Falha ao carregar transações.");
       } finally {
         setIsLoading(false);
       }
     }
 
-    fetchTransactions();
+    fetchTransactions(token);
   }, [router]);
 
-  // 🔥 CRIAR TRANSAÇÃO
-  async function handleTransaction(e: React.FormEvent) {
+  const totals = useMemo(() => {
+    return transactions.reduce(
+      (acc, t) => {
+        if (t.type === "entrada") acc.entradas += t.amount;
+        else acc.saidas += t.amount;
+        return acc;
+      },
+      { entradas: 0, saidas: 0 }
+    );
+  }, [transactions]);
+
+  const saldo = totals.entradas - totals.saidas;
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setNotice("");
 
     const token = localStorage.getItem("token");
     if (!token) {
@@ -79,34 +112,28 @@ export default function TransactionsPage() {
       return;
     }
 
-    // Validações
-    if (!valor || parseFloat(valor) <= 0) {
-      setError("Digite um valor válido maior que zero");
-      return;
-    }
-
-    // Validação da data: deve estar dentro dos últimos 3 meses
-    const today = new Date();
-    const selected = new Date(dataTransacao + "T00:00:00");
-    const minDate = new Date();
-    // considerar os últimos 3 meses incluindo o mês atual: min = dia 1 de 2 meses atrás
-    minDate.setMonth(minDate.getMonth() - 2);
-    minDate.setDate(1);
-    // normaliza horas para comparação
-    minDate.setHours(0, 0, 0, 0);
-    today.setHours(23, 59, 59, 999);
-
-    if (selected < minDate || selected > today) {
-      setError("A data deve estar dentro dos últimos 3 meses");
+    const parsedValue = parseFloat(valor);
+    if (!valor || Number.isNaN(parsedValue) || parsedValue <= 0) {
+      setError("Digite um valor maior que zero.");
       return;
     }
 
     if (!descricao.trim()) {
-      setError("Digite uma descrição");
+      setError("Digite uma descrição.");
+      return;
+    }
+
+    const selected = new Date(dataTransacao + "T00:00:00");
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+
+    if (selected < minAllowedDate() || selected > today) {
+      setError("A data deve estar dentro dos últimos 3 meses.");
       return;
     }
 
     setError("");
+    setSaving(true);
 
     try {
       const res = await fetch("/api/transactions", {
@@ -116,43 +143,38 @@ export default function TransactionsPage() {
           Authorization: token,
         },
         body: JSON.stringify({
-          amount: parseFloat(valor), // CONVERTE para número
+          amount: parsedValue,
           type: tipo,
           description: descricao.trim(),
-          date: new Date(dataTransacao + "T00:00:00").toISOString(),
+          date: selected.toISOString(),
         }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || "Erro ao criar transação");
+        throw new Error(data.error || "Erro ao criar transação.");
       }
 
-      // Adicionar nova transação no início da lista
-      setTransactions([data, ...transactions]);
-
-      // Limpar formulário
+      setTransactions((current) => [data, ...current]);
       setValor("");
       setDescricao("");
       setDataTransacao(new Date().toISOString().slice(0, 10));
-
-      // Redirecionar ao dashboard para refletir no histórico mensal
-      router.push("/dashboard");
+      setNotice("Transação registrada.");
     } catch (e: any) {
-      console.error("ERRO NO POST:", e);
-      setError(e.message || "Erro ao criar transação");
+      setError(e.message || "Erro ao criar transação.");
+    } finally {
+      setSaving(false);
     }
   }
 
-  // 🔥 DELETAR TRANSAÇÃO
   async function deleteTransaction(id: string) {
-    if (!confirm("Tem certeza que deseja excluir esta transação?")) {
-      return;
-    }
+    if (!confirm("Excluir esta transação?")) return;
 
     const token = localStorage.getItem("token");
     if (!token) return;
+
+    setNotice("");
 
     try {
       const res = await fetch("/api/transactions", {
@@ -166,211 +188,244 @@ export default function TransactionsPage() {
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || "Erro ao excluir transação");
+        throw new Error(data.error || "Erro ao excluir transação.");
       }
 
-      // Remover da lista local
-      setTransactions(transactions.filter((t) => t.id !== id));
-
-      alert("✅ Transação excluída com sucesso!");
+      setTransactions((current) => current.filter((t) => t.id !== id));
+      setNotice("Transação excluída.");
     } catch (e: any) {
-      console.error("ERRO NO DELETE:", e);
-      alert(`❌ Erro: ${e.message}`);
+      setError(e.message || "Erro ao excluir transação.");
     }
   }
 
-  // Formatar data
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("pt-BR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800">
-      <Header title="Página de Transações" />
+    <div className="min-h-screen">
+      <Header title="Transações" />
 
-      <section className="container p-4 md:p-6 mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* FORMULÁRIO */}
-          <div className="glass p-6 rounded-xl elevated text-slate-100">
-            <h2 className="text-xl font-bold mb-6">➕ Adicionar Transação</h2>
+      <main className="container-max py-8">
+        <header className="mb-8">
+          <h1 className="mb-1 text-3xl font-bold">Transações</h1>
+          <p className="text-text-muted">
+            Registre entradas e saídas dos últimos 3 meses.
+          </p>
+        </header>
 
-            <form onSubmit={handleTransaction} className="space-y-4">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
+          {/* Form */}
+          <section className="card lg:col-span-2">
+            <h2 className="mb-5 text-lg font-bold">Nova transação</h2>
+
+            {error && (
+              <div
+                role="alert"
+                className="mb-4 rounded-lg border border-danger-500/30 bg-danger-500/10 p-3 text-sm text-danger-400"
+              >
+                {error}
+              </div>
+            )}
+
+            {notice && (
+              <div
+                role="status"
+                className="mb-4 rounded-lg border border-success-500/30 bg-success-500/10 p-3 text-sm text-success-400"
+              >
+                {notice}
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block mb-2 text-sm font-medium">
-                  Valor (R$)
-                </label>
+                <label htmlFor="tipo">Tipo</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setTipo("entrada")}
+                    aria-pressed={tipo === "entrada"}
+                    className={`btn ${
+                      tipo === "entrada" ? "btn-success" : "btn-outline"
+                    }`}
+                  >
+                    Entrada
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTipo("saida")}
+                    aria-pressed={tipo === "saida"}
+                    className={`btn ${
+                      tipo === "saida" ? "btn-danger" : "btn-outline"
+                    }`}
+                  >
+                    Saída
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="valor">Valor (R$)</label>
                 <input
-                  className="w-full p-3 border rounded text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  id="valor"
                   type="number"
                   step="0.01"
                   min="0.01"
-                  placeholder="Ex: 150.50"
+                  inputMode="decimal"
+                  placeholder="0,00"
                   value={valor}
                   onChange={(e) => setValor(e.target.value)}
+                  className="w-full"
                   required
                 />
               </div>
 
               <div>
-                <label className="block mb-2 text-sm font-medium">Data</label>
+                <label htmlFor="descricao">Descrição</label>
                 <input
-                  type="date"
-                  className="w-full p-3 border rounded text-white bg-transparent"
-                  value={dataTransacao}
-                  onChange={(e) => setDataTransacao(e.target.value)}
-                  max={new Date().toISOString().slice(0, 10)}
-                  min={(() => {
-                    const d = new Date();
-                    d.setMonth(d.getMonth() - 2);
-                    d.setDate(1);
-                    return d.toISOString().slice(0, 10);
-                  })()}
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block mb-2 text-sm font-medium">Tipo</label>
-                <select
-                  value={tipo}
-                  className="w-full p-3 border rounded text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  onChange={(e) => setTipo(e.target.value)}
-                >
-                  <option value="entrada" className="text-gray-300">
-                    💰 Entrada (Dinheiro recebido)
-                  </option>
-                  <option value="saida" className="text-gray-300">
-                    💸 Saída (Dinheiro gasto)
-                  </option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block mb-2 text-sm font-medium">
-                  Descrição
-                </label>
-                <input
-                  className="w-full p-3 border rounded text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  id="descricao"
                   type="text"
-                  placeholder="Ex: Salário, Mercado, Uber, Conta de luz"
+                  placeholder="Mercado, salário, aluguel"
                   value={descricao}
                   onChange={(e) => setDescricao(e.target.value)}
+                  className="w-full"
                   required
                 />
               </div>
 
-              {error && (
-                <div className="p-3 bg-red-100 border border-red-300 text-red-700 rounded">
-                  ❌ {error}
-                </div>
-              )}
+              <div>
+                <label htmlFor="data">Data</label>
+                <input
+                  id="data"
+                  type="date"
+                  value={dataTransacao}
+                  onChange={(e) => setDataTransacao(e.target.value)}
+                  min={minAllowedDate().toISOString().slice(0, 10)}
+                  max={new Date().toISOString().slice(0, 10)}
+                  className="w-full"
+                  required
+                />
+              </div>
 
-              <button type="submit" className="btn btn-primary w-full">
-                📝 Adicionar Transação
+              <button
+                type="submit"
+                disabled={saving}
+                className="btn btn-primary w-full"
+              >
+                {saving ? "Salvando..." : "Registrar transação"}
               </button>
             </form>
-          </div>
+          </section>
 
-          {/* LISTA DE TRANSAÇÕES */}
-          <div className="glass p-6 rounded-xl elevated text-slate-100">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold">📋 Suas Transações</h2>
-              <span className="bg-white/20 px-3 py-1 rounded-full text-sm">
-                {transactions.length}{" "}
-                {transactions.length === 1 ? "transação" : "transações"}
-              </span>
+          {/* List */}
+          <section className="lg:col-span-3">
+            <div className="mb-6 grid grid-cols-3 gap-3">
+              <div className="card card-sm">
+                <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-text-muted">
+                  Entradas
+                </p>
+                <p className="text-lg font-bold text-success-400">
+                  {money(totals.entradas)}
+                </p>
+              </div>
+              <div className="card card-sm">
+                <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-text-muted">
+                  Saídas
+                </p>
+                <p className="text-lg font-bold text-danger-400">
+                  {money(totals.saidas)}
+                </p>
+              </div>
+              <div className="card card-sm">
+                <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-text-muted">
+                  Saldo
+                </p>
+                <p
+                  className={`text-lg font-bold ${
+                    saldo >= 0 ? "text-primary-400" : "text-danger-400"
+                  }`}
+                >
+                  {money(saldo)}
+                </p>
+              </div>
             </div>
 
-            {isLoading ? (
-              <div className="text-center py-8">
-                <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                <p>Carregando transações...</p>
-              </div>
-            ) : transactions.length === 0 ? (
-              <div className="text-center py-8">
-                <div className="text-4xl mb-4">📭</div>
-                <p className="mb-2">Nenhuma transação cadastrada</p>
-                <p className="text-sm opacity-80">
-                  Adicione sua primeira transação usando o formulário ao lado
+            <div className="card">
+              <h2 className="mb-4 text-lg font-bold">
+                Histórico
+                {transactions.length > 0 && (
+                  <span className="ml-2 text-sm font-medium text-text-muted">
+                    {transactions.length}
+                  </span>
+                )}
+              </h2>
+
+              {isLoading ? (
+                <div className="space-y-2">
+                  {[0, 1, 2].map((i) => (
+                    <div
+                      key={i}
+                      className="h-16 animate-pulse rounded-lg bg-bg-tertiary"
+                    />
+                  ))}
+                </div>
+              ) : transactions.length === 0 ? (
+                <p className="py-10 text-center text-text-muted">
+                  Nenhuma transação registrada ainda.
                 </p>
-              </div>
-            ) : (
-              <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
-                {transactions.map((t) => (
-                  <div
-                    key={t.id}
-                    className="bg-white/10 border border-white/20 p-4 rounded-lg hover:bg-white/20 transition-colors duration-200"
-                  >
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
+              ) : (
+                <ul className="space-y-2">
+                  {transactions.map((t) => {
+                    const isIncome = t.type === "entrada";
+                    return (
+                      <li
+                        key={t.id}
+                        className="flex items-center justify-between gap-3 rounded-lg border border-border p-3 transition-colors hover:border-border-light"
+                      >
+                        <div className="flex min-w-0 items-center gap-3">
                           <span
-                            className={`px-2 py-1 rounded text-xs font-bold ${
-                              t.type === "entrada"
-                                ? "bg-green-500"
-                                : "bg-red-500"
+                            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-sm font-bold ${
+                              isIncome
+                                ? "bg-success-500/15 text-success-400"
+                                : "bg-danger-500/15 text-danger-400"
+                            }`}
+                            aria-hidden="true"
+                          >
+                            {isIncome ? "+" : "-"}
+                          </span>
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-medium">
+                              {t.description || (isIncome ? "Entrada" : "Saída")}
+                            </p>
+                            <p className="text-xs text-text-muted">
+                              {fullDate(t.date)}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex shrink-0 items-center gap-3">
+                          <span
+                            className={`text-sm font-semibold ${
+                              isIncome ? "text-success-400" : "text-danger-400"
                             }`}
                           >
-                            {t.type === "entrada" ? "ENTRADA" : "SAÍDA"}
+                            {isIncome ? "+" : "-"}
+                            {money(Math.abs(t.amount))}
                           </span>
-                          <span className="font-bold text-lg">
-                            R$ {t.amount.toFixed(2)}
-                          </span>
-                        </div>
-
-                        <p className="mb-1">{t.description}</p>
-
-                        <div className="flex justify-between items-center text-sm opacity-80">
-                          <span>{formatDate(t.date)}</span>
                           <button
+                            type="button"
                             onClick={() => deleteTransaction(t.id)}
-                            className="btn btn-danger text-sm"
-                            title="Excluir transação"
+                            aria-label={`Excluir ${t.description || "transação"}`}
+                            className="btn btn-ghost btn-sm text-text-muted hover:text-danger-400"
                           >
-                            🗑️ Excluir
+                            Excluir
                           </button>
                         </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {transactions.length > 0 && (
-              <div className="mt-6 pt-6 border-t border-white/30">
-                <p className="text-center text-sm opacity-80">
-                  Total:{" "}
-                  <span className="font-bold">
-                    R${" "}
-                    {transactions
-                      .reduce(
-                        (total, t) =>
-                          t.type === "entrada"
-                            ? total + t.amount
-                            : total - t.amount,
-                        0
-                      )
-                      .toFixed(2)}
-                  </span>
-                </p>
-              </div>
-            )}
-          </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
+          </section>
         </div>
-        <div className="flex items-center justify-center mt-4 glass p-6 rounded-xl shadow-lg">
-          <Link
-            href={"/dashboard"}
-            className="btn btn-outline w-full text-center"
-          >
-            Clique aqui para retornar ao Dashboard
-          </Link>
-        </div>
-      </section>
+      </main>
     </div>
   );
 }
