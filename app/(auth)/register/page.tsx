@@ -1,157 +1,197 @@
+// app/(auth)/register/page.tsx - NOVO DESIGN
 "use client";
+
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
 import Link from "next/link";
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
   const [loading, setLoading] = useState(false);
-  const [isClient, setIsClient] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
-  useEffect(() => {
-    setIsClient(true);
-    const token = localStorage.getItem("token");
-    if (token) router.push("/dashboard");
-  }, [router]);
-
-  async function handleRegister(event: React.FormEvent) {
-    event.preventDefault();
-    setLoading(true);
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
     setError("");
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+
+    if (formData.password !== formData.confirmPassword) {
+      setError("As senhas não coincidem");
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      setError("A senha deve ter pelo menos 6 caracteres");
+      return;
+    }
+
+    setLoading(true);
 
     try {
-      const res = await fetch("/api/auth/register", {
+      const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          password: formData.password,
+        }),
       });
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.message || "Erro ao criar usuário");
+      if (!response.ok) {
+        const data = await response.json();
+        setError(data.error || "Erro ao criar conta");
+        setLoading(false);
         return;
       }
 
-      if (data.token) {
-        localStorage.setItem("token", data.token);
-      }
-      if (data.user) {
-        localStorage.setItem("user", JSON.stringify(data.user));
-      }
-
-      router.push("/dashboard");
-      router.refresh();
+      setSuccess("Conta criada! Redirecionando...");
+      setTimeout(() => router.push("/login"), 1500);
     } catch (err) {
       setError("Erro ao conectar com o servidor");
-    } finally {
       setLoading(false);
     }
-  }
-
-  if (!isClient) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#030014]">
-        <div className="w-10 h-10 border-4 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
-  }
+  };
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-[#030014] animate-aurora">
-      {/* Background Decorative Elements */}
-      <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-primary-600/20 blur-[120px] pointer-events-none"></div>
-      <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-[#34d399]/10 blur-[120px] pointer-events-none"></div>
-
-      <div className="glass-panel p-10 rounded-3xl w-full max-w-md relative z-10 mx-4">
+    <div className="min-h-screen bg-bg flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        {/* Logo/Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-600 shadow-[0_0_20px_rgba(124,58,237,0.4)] mb-6">
-            <span className="text-2xl">🚀</span>
-          </div>
-          <h1 className="text-4xl font-bold mb-2 text-gradient">Criar conta</h1>
-          <p className="text-muted text-lg">Preencha seus dados para começar</p>
+          <h1 className="text-3xl font-bold text-text-primary mb-2">
+            💰 Meu Financeiro
+          </h1>
+          <p className="text-text-muted">Comece a controlar suas finanças agora</p>
         </div>
 
-        {error && (
-          <div className="mb-6 p-4 bg-danger-500/10 border border-danger-500/20 text-danger-500 rounded-xl text-sm flex items-center">
-            <span className="mr-2">⚠️</span> {error}
-          </div>
-        )}
+        {/* Register Card */}
+        <div className="card card-lg">
+          <h2 className="text-2xl font-bold text-text-primary mb-6">
+            Criar Conta
+          </h2>
 
-        <form onSubmit={handleRegister} className="space-y-5">
-          <div className="space-y-1.5">
-            <label className="block text-sm font-medium text-slate-300 ml-1">
-              Nome
-            </label>
-            <input
-              type="text"
-              placeholder="Como prefere ser chamado?"
-              className="w-full px-5 py-3.5"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
-          </div>
+          {error && (
+            <div className="mb-4 p-3 rounded-lg bg-danger-500/10 border border-danger-500/30">
+              <p className="text-sm text-danger-400">{error}</p>
+            </div>
+          )}
 
-          <div className="space-y-1.5">
-            <label className="block text-sm font-medium text-slate-300 ml-1">
-              E-mail
-            </label>
-            <input
-              type="email"
-              placeholder="seu@email.com"
-              className="w-full px-5 py-3.5"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
+          {success && (
+            <div className="mb-4 p-3 rounded-lg bg-success-500/10 border border-success-500/30">
+              <p className="text-sm text-success-400">{success}</p>
+            </div>
+          )}
 
-          <div className="space-y-1.5">
-            <label className="block text-sm font-medium text-slate-300 ml-1">
-              Senha
-            </label>
-            <input
-              type="password"
-              placeholder="Crie uma senha forte"
-              className="w-full px-5 py-3.5"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Name */}
+            <div>
+              <label htmlFor="name" className="label">
+                Nome Completo
+              </label>
+              <input
+                id="name"
+                type="text"
+                name="name"
+                placeholder="Seu nome"
+                value={formData.name}
+                onChange={handleChange}
+                required
+                autoComplete="name"
+              />
+            </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full btn-primary py-3.5 text-base shadow-lg shadow-primary-500/25 mt-4"
-          >
-            {loading ? (
-              <span className="flex items-center justify-center">
-                <div className="w-5 h-5 border-2 border-white/80 border-t-transparent rounded-full animate-spin mr-3"></div>
-                Registrando...
-              </span>
-            ) : (
-              "Criar minha conta"
-            )}
-          </button>
-        </form>
+            {/* Email */}
+            <div>
+              <label htmlFor="email" className="label">
+                Email
+              </label>
+              <input
+                id="email"
+                type="email"
+                name="email"
+                placeholder="seu@email.com"
+                value={formData.email}
+                onChange={handleChange}
+                required
+                autoComplete="email"
+              />
+            </div>
 
-        <div className="text-center mt-8 pt-6 border-t border-white/5">
-          <p className="text-muted text-sm">
-            Já tem uma conta?{" "}
-            <Link
-              href="/login"
-              className="text-primary-400 hover:text-primary-300 font-medium transition-colors"
+            {/* Password */}
+            <div>
+              <label htmlFor="password" className="label">
+                Senha
+              </label>
+              <input
+                id="password"
+                type="password"
+                name="password"
+                placeholder="••••••••"
+                value={formData.password}
+                onChange={handleChange}
+                required
+                autoComplete="new-password"
+              />
+              <p className="text-xs text-text-muted mt-1">Mínimo 6 caracteres</p>
+            </div>
+
+            {/* Confirm Password */}
+            <div>
+              <label htmlFor="confirmPassword" className="label">
+                Confirmar Senha
+              </label>
+              <input
+                id="confirmPassword"
+                type="password"
+                name="confirmPassword"
+                placeholder="••••••••"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                required
+                autoComplete="new-password"
+              />
+            </div>
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn btn-primary w-full"
             >
-              Fazer login
-            </Link>
-          </p>
+              {loading ? "Criando conta..." : "Criar Conta"}
+            </button>
+          </form>
+
+          {/* Divider */}
+          <div className="my-6 flex items-center gap-4">
+            <div className="flex-1 h-px bg-border"></div>
+            <span className="text-xs text-text-muted uppercase">Já tem conta?</span>
+            <div className="flex-1 h-px bg-border"></div>
+          </div>
+
+          {/* Login Link */}
+          <Link href="/login" className="btn btn-outline w-full">
+            Entrar
+          </Link>
         </div>
+
+        {/* Footer */}
+        <p className="text-center text-xs text-text-muted mt-6">
+          Seus dados são seguros e privados
+        </p>
       </div>
     </div>
   );

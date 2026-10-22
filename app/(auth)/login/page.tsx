@@ -1,156 +1,136 @@
-// app/login/page.tsx - VERSÃO CORRIGIDA E REFATORADA
+// app/(auth)/login/page.tsx - NOVO DESIGN
 "use client";
 
-import Link from "next/link";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import Link from "next/link";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [formData, setFormData] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
-  const [isClient, setIsClient] = useState(false);
+  const [error, setError] = useState("");
 
-  useEffect(() => {
-    setIsClient(true);
-    if (typeof window !== "undefined") {
-      const token = localStorage.getItem("token");
-      if (token) {
-        router.push("/dashboard");
-      }
-    }
-  }, [router]);
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    setError("");
+  };
 
-  async function handleLogin(event: React.FormEvent) {
-    event.preventDefault();
-
-    if (typeof window === "undefined") return;
-
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setLoading(true);
     setError("");
 
     try {
-      const res = await fetch("/api/auth/login", {
+      const response = await fetch("/api/auth/login", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
       });
 
-      const data = await res.json();
-
-      if (res.ok && data.token) {
-        localStorage.setItem("token", data.token);
-
-        if (data.user) {
-          localStorage.setItem("user", JSON.stringify(data.user));
-        }
-
-        router.push("/dashboard");
-        router.refresh();
-      } else {
-        setError(data.message || data.error || "Credenciais inválidas");
+      if (!response.ok) {
+        const data = await response.json();
+        setError(data.error || "Erro ao fazer login");
+        setLoading(false);
+        return;
       }
-    } catch (error) {
+
+      const data = await response.json();
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+      router.push("/dashboard");
+    } catch (err) {
       setError("Erro ao conectar com o servidor");
-    } finally {
       setLoading(false);
     }
-  }
-
-  if (!isClient) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#030014]">
-        <div className="w-10 h-10 border-4 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
-  }
+  };
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-[#030014] animate-aurora">
-      {/* Background Decorative Elements */}
-      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary-600/20 blur-[120px] pointer-events-none"></div>
-      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-[#38bdf8]/10 blur-[120px] pointer-events-none"></div>
-      
-      <div className="glass-panel p-10 rounded-3xl w-full max-w-md relative z-10 mx-4">
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-600 shadow-[0_0_20px_rgba(124,58,237,0.4)] mb-6">
-            <span className="text-2xl">✨</span>
-          </div>
-          <h1 className="text-4xl font-bold mb-2 text-gradient">Bem-vindo(a)</h1>
-          <p className="text-muted text-lg">Acesse sua conta para continuar</p>
+    <div className="min-h-screen bg-bg flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        {/* Logo/Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-text-primary mb-2">
+            💰 Meu Financeiro
+          </h1>
+          <p className="text-text-muted">Controle suas finanças de forma simples</p>
         </div>
 
-        {error && (
-          <div className="mb-6 p-4 bg-danger-500/10 border border-danger-500/20 text-danger-500 rounded-xl text-sm flex items-center">
-            <span className="mr-2">⚠️</span> {error}
-          </div>
-        )}
+        {/* Login Card */}
+        <div className="card card-lg">
+          <h2 className="text-2xl font-bold text-text-primary mb-6">
+            Bem-vindo de volta
+          </h2>
 
-        <form onSubmit={handleLogin} className="space-y-6">
-          <div className="space-y-1.5">
-            <label className="block text-sm font-medium text-slate-300 ml-1">
-              E-mail
-            </label>
-            <input
-              type="email"
-              placeholder="seu@email.com"
-              className="w-full px-5 py-3.5"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
+          {error && (
+            <div className="mb-4 p-3 rounded-lg bg-danger-500/10 border border-danger-500/30">
+              <p className="text-sm text-danger-400">{error}</p>
+            </div>
+          )}
 
-          <div className="space-y-1.5">
-            <div className="flex justify-between items-center ml-1">
-              <label className="block text-sm font-medium text-slate-300">
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Email */}
+            <div>
+              <label htmlFor="email" className="label">
+                Email
+              </label>
+              <input
+                id="email"
+                type="email"
+                name="email"
+                placeholder="seu@email.com"
+                value={formData.email}
+                onChange={handleChange}
+                required
+                autoComplete="email"
+              />
+            </div>
+
+            {/* Password */}
+            <div>
+              <label htmlFor="password" className="label">
                 Senha
               </label>
-              <a href="#" className="text-xs text-primary-400 hover:text-primary-500 transition-colors">
-                Esqueceu a senha?
-              </a>
+              <input
+                id="password"
+                type="password"
+                name="password"
+                placeholder="••••••••"
+                value={formData.password}
+                onChange={handleChange}
+                required
+                autoComplete="current-password"
+              />
             </div>
-            <input
-              type="password"
-              placeholder="Sua senha secreta"
-              className="w-full px-5 py-3.5"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn btn-primary w-full"
+            >
+              {loading ? "Entrando..." : "Entrar"}
+            </button>
+          </form>
+
+          {/* Divider */}
+          <div className="my-6 flex items-center gap-4">
+            <div className="flex-1 h-px bg-border"></div>
+            <span className="text-xs text-text-muted uppercase">Novo aqui?</span>
+            <div className="flex-1 h-px bg-border"></div>
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full btn-primary py-3.5 text-base shadow-lg shadow-primary-500/25 mt-2"
-          >
-            {loading ? (
-              <span className="flex items-center justify-center">
-                <div className="w-5 h-5 border-2 border-white/80 border-t-transparent rounded-full animate-spin mr-3"></div>
-                Autenticando...
-              </span>
-            ) : (
-              "Entrar na plataforma"
-            )}
-          </button>
-        </form>
-        
-        <div className="text-center mt-8 pt-6 border-t border-white/5">
-          <p className="text-muted text-sm">
-            Ainda não tem uma conta?{" "}
-            <Link
-              href="/register"
-              className="text-primary-400 hover:text-primary-300 font-medium transition-colors"
-            >
-              Criar conta agora
-            </Link>
-          </p>
+          {/* Register Link */}
+          <Link href="/register" className="btn btn-outline w-full">
+            Criar Conta
+          </Link>
         </div>
+
+        {/* Footer */}
+        <p className="text-center text-xs text-text-muted mt-6">
+          Seus dados são seguros e privados
+        </p>
       </div>
     </div>
   );
