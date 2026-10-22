@@ -47,9 +47,30 @@ export async function POST(req: NextRequest) {
       },
     });
   } catch (error) {
-    console.error(error);
+    console.error("Erro ao fazer login", error);
+
+    const code = (error as { code?: string })?.code;
+
+    if (code === "P2021" || code === "P2022") {
+      return NextResponse.json(
+        {
+          error:
+            "O banco de dados ainda não tem as tabelas. Rode as migrações do Prisma.",
+          code,
+        },
+        { status: 503 }
+      );
+    }
+
+    if (code === "P1001" || code === "P1017") {
+      return NextResponse.json(
+        { error: "Não foi possível conectar ao banco de dados.", code },
+        { status: 503 }
+      );
+    }
+
     return NextResponse.json(
-      { error: "Erro interno do servidor" },
+      { error: "Erro interno do servidor", code },
       { status: 500 }
     );
   }
