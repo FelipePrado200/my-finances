@@ -18,7 +18,7 @@ model User {
 
 model Transaction {
   id          String   @id @default(cuid())
-  amount      Decimal  @db.Numeric(10, 2)
+  amount      Decimal  @db.Decimal(10, 2)
   type        String
   description String?
   date        DateTime @default(now())
